@@ -1,6 +1,10 @@
 # Welcome to WAGMI NFT Frontend Booster
 
-Write less, Do more.
+<p align="center">WAGMI ! Write less, Do more</p>
+
+<p align="center"> 
+  <img src="./readme.gif" alt="drawing" width="600"/>
+</p>
 
 ## Installation
 
