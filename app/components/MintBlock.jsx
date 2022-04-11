@@ -1,14 +1,10 @@
-import { useMemo, useState } from 'react'
-import {
-  useAccount,
-  useContractRead,
-  useContractWrite,
-  useProvider,
-  useWaitForTransaction,
-} from 'wagmi'
+import { useMemo, useState, useEffect } from 'react'
+import { useAccount, useProvider, useWaitForTransaction } from 'wagmi'
 import { utils } from 'ethers'
+
 import MoarABI from '../abi/moar'
 import { mintErrorFormat } from '../utils/errorFormat'
+import { readContract, writeContract } from '../utils/contract/helper'
 
 import ConnectorButton from '../components/ConnectorButton'
 
@@ -17,37 +13,27 @@ export default function MintBlock() {
   const [isMintSuccess, setIsMintSuccess] = useState(false)
   const [isMintFailed, setIsMintFailed] = useState(false)
   const [{ data: accountData }] = useAccount()
-  const [{ data: contractReadData }, read] = useContractRead(
-    {
-      addressOrName: window.ENV.CONTRACT_ADDRESS,
-      contractInterface: MoarABI,
-      signerOrProvider: provider,
-    },
-    'balanceOf',
-    {
-      args: accountData?.address,
-    }
-  )
 
-  const [{ data: transactionResponse, error, loading }, write] =
-    useContractWrite(
-      {
-        addressOrName: window.ENV.CONTRACT_ADDRESS,
-        contractInterface: MoarABI,
-        signerOrProvider: provider,
-      },
-      'privateMint',
-      {
-        args: [[accountData?.address]],
-      }
-    )
+  const [{ data: contractReadData }, read] = readContract({
+    method: 'balanceOf',
+    provider,
+    abi: MoarABI,
+    args: accountData?.address,
+  })
+
+  const [{ data: transactionResponse, error, loading }, write] = writeContract({
+    method: 'privateMint',
+    provider,
+    abi: MoarABI,
+    args: [[accountData?.address]],
+  })
 
   const [{ data: transactionData, loading: transactionLoading }] =
     useWaitForTransaction({
       hash: transactionResponse?.hash,
     })
 
-  useMemo(() => {
+  useEffect(() => {
     if (transactionLoading) return
     read()
   }, [accountData?.address, transactionLoading])
@@ -60,6 +46,13 @@ export default function MintBlock() {
         return setIsMintSuccess(true)
     }
   }, [transactionData])
+
+  const handleMintNFT = () => {
+    setIsMintSuccess(false)
+    setIsMintFailed(false)
+    if (transactionLoading) return
+    write()
+  }
 
   return (
     <div
@@ -95,7 +88,7 @@ export default function MintBlock() {
               {loading || transactionLoading ? (
                 '鑄造中...'
               ) : (
-                <button onClick={() => write()}>進行鑄造</button>
+                <button onClick={handleMintNFT}>進行鑄造</button>
               )}
             </div>
             {isMintFailed ? (
