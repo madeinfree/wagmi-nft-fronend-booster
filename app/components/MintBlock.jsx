@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { useAccount, useProvider, useWaitForTransaction } from 'wagmi'
 import { utils } from 'ethers'
 
-import MoarABI from '../abi/moar'
+import WAGMINFB from '../abi/wagmi-nfb'
 import { mintErrorFormat } from '../utils/errorFormat'
 import { readContract, writeContract } from '../utils/contract/helper'
 
@@ -17,21 +17,20 @@ export default function MintBlock() {
   const [{ data: contractReadData }, read] = readContract({
     method: 'balanceOf',
     provider,
-    abi: MoarABI,
+    abi: WAGMINFB,
     args: accountData?.address,
   })
 
   const [{ data: totalSupply }, readTotalSupply] = readContract({
     method: 'totalSupply',
     provider,
-    abi: MoarABI,
+    abi: WAGMINFB,
   })
 
   const [{ data: transactionResponse, error, loading }, write] = writeContract({
-    method: 'privateMint',
+    method: 'mint',
     provider,
-    abi: MoarABI,
-    args: [[accountData?.address]],
+    abi: WAGMINFB,
   })
 
   const [{ data: transactionData, loading: transactionLoading }] =
@@ -58,7 +57,11 @@ export default function MintBlock() {
     setIsMintSuccess(false)
     setIsMintFailed(false)
     if (transactionLoading) return
-    write()
+    write({
+      overrides: {
+        value: utils.parseEther('0.03'),
+      },
+    })
   }
 
   return (
