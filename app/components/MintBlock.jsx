@@ -21,6 +21,12 @@ export default function MintBlock() {
     args: accountData?.address,
   })
 
+  const [{ data: totalSupply }, readTotalSupply] = readContract({
+    method: 'totalSupply',
+    provider,
+    abi: MoarABI,
+  })
+
   const [{ data: transactionResponse, error, loading }, write] = writeContract({
     method: 'privateMint',
     provider,
@@ -36,6 +42,7 @@ export default function MintBlock() {
   useEffect(() => {
     if (transactionLoading) return
     read()
+    readTotalSupply()
   }, [accountData?.address, transactionLoading])
 
   useMemo(() => {
@@ -102,6 +109,10 @@ export default function MintBlock() {
                 {error ? mintErrorFormat(error) : null}
               </div>
             ) : null}
+            <div style={{ marginTop: 20 }}>
+              已鑄造總數量：
+              {totalSupply ? utils.formatUnits(totalSupply, 0) : '查詢中...'}
+            </div>
           </div>
         ) : (
           <div>
